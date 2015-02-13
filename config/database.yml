@@ -1,0 +1,20 @@
+default: &default
+  adapter: postgresql
+  encoding: unicode
+  pool: 5
+  host: <%= ENV["DOCKER_IP"] %>
+  port: 5432
+  username: postgres
+  password:
+
+development:
+  <<: *default
+  database: contacts_development
+
+test:
+  <<: *default
+  database: contacts_test
+
+production:
+  url:  <%= ENV["DATABASE_URL"] %>
+  pool: <%= ENV["MAX_THREADS"] || 5 %>
