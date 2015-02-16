@@ -9,6 +9,11 @@ module API
         format :json
         formatter :json, Grape::Formatter::ActiveModelSerializers
 
+        before do
+          header["Access-Control-Allow-Origin"] = "*"
+          header["Access-Control-Request-Method"] = "*"
+        end
+
         helpers do
           def logger
             Rails.logger

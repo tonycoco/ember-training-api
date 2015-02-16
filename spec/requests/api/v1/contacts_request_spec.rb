@@ -164,9 +164,13 @@ describe "API::V1::Contacts Requests" do
   end
 
   describe "DELETE /api/v1/contacts/:id" do
+    let!(:contact) { FactoryGirl.create(:contact) }
+
     context "not found" do
       before do
-        delete "/api/v1/contacts/0"
+        expect do
+          delete "/api/v1/contacts/0"
+        end.to_not change { Contact.count }
       end
 
       it { is_expected.to_not be_ok }
@@ -177,10 +181,10 @@ describe "API::V1::Contacts Requests" do
     end
 
     context "found" do
-      let(:contact) { FactoryGirl.create(:contact) }
-
       before do
-        delete "/api/v1/contacts/#{contact.id}"
+        expect do
+          delete "/api/v1/contacts/#{contact.id}"
+        end.to change { Contact.count }.from(1).to(0)
       end
 
       it { is_expected.to_not be_ok }

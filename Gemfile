@@ -12,7 +12,6 @@ gem "grape-active_model_serializers", github: "jrhe/grape-active_model_serialize
 gem "grape-swagger-rails"
 gem "pg"
 gem "puma"
-gem "rack-cors", require: "rack/cors"
 gem "rack-timeout"
 gem "uglifier"
 
