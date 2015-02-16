@@ -6,6 +6,7 @@ describe "API::V1::Contacts Requests" do
   let(:status) { subject.status }
   let(:body) { subject.body }
   let(:json) { JSON.parse(body).with_indifferent_access }
+  let(:error_json) { json[:error] }
 
   describe "GET /api/v1/contacts" do
     let(:contacts_json) { json[:contacts] }
@@ -45,8 +46,6 @@ describe "API::V1::Contacts Requests" do
   end
 
   describe "GET /api/v1/contacts/:id" do
-    let(:contact) { FactoryGirl.create(:contact) }
-
     context "not found" do
       before do
         get "/api/v1/contacts/0"
@@ -55,9 +54,12 @@ describe "API::V1::Contacts Requests" do
       it { is_expected.to_not be_ok }
       it { is_expected.to_not be_success }
       it { expect(status).to eq(404) }
+      it { expect(json).to have_key(:error) }
+      it { expect(error_json).to eq("Couldn't find Contact with ID = 0") }
     end
 
     context "found" do
+      let(:contact) { FactoryGirl.create(:contact) }
       let(:expected_contact_json) do
         JSON.parse(ContactSerializer.new(contact).to_json)
       end
@@ -75,23 +77,94 @@ describe "API::V1::Contacts Requests" do
   end
 
   describe "POST /api/v1/contacts" do
-    it "needs specs"
+    context "invalid" do
+      before do
+        expect do
+          post "/api/v1/contacts"
+        end.to_not change { Contact.count }
+      end
+
+      it { is_expected.to_not be_ok }
+      it { is_expected.to_not be_success }
+      it { expect(status).to eq(400) }
+      it { expect(json).to have_key(:error) }
+      it { expect(error_json).to include("email") }
+      it { expect(error_json).to include("first_name") }
+      it { expect(error_json).to include("last_name") }
+      it { expect(error_json).to include("phone_number") }
+    end
+
+    context "valid" do
+      let(:contact_attributes) { FactoryGirl.attributes_for(:contact) }
+      let(:contact_json) { json[:contact] }
+      let(:expected_contact_json) do
+        JSON.parse(ContactSerializer.new(Contact.last).to_json)
+      end
+
+      before do
+        expect do
+          post "/api/v1/contacts", contact_attributes
+        end.to change { Contact.count }.from(0).to(1)
+      end
+
+      it { is_expected.to_not be_ok }
+      it { is_expected.to be_success }
+      it { expect(status).to eq(201) }
+      it { expect(json).to have_key(:contact) }
+      it { expect(json).to eq(expected_contact_json) }
+    end
   end
 
   describe "PATCH /api/v1/contacts/:id" do
-    it "needs specs"
+    context "not found" do
+      before do
+        patch "/api/v1/contacts/0"
+      end
+
+      it { is_expected.to_not be_ok }
+      it { is_expected.to_not be_success }
+      it { expect(status).to eq(404) }
+      it { expect(json).to have_key(:error) }
+      it { expect(error_json).to eq("Couldn't find Contact with ID = 0") }
+    end
+
+    context "found" do
+      let(:contact) { FactoryGirl.create(:contact) }
+      let(:another_contact) { FactoryGirl.create(:contact) }
+
+      context "invalid" do
+        before do
+          patch "/api/v1/contacts/#{contact.id}", email: another_contact.email
+        end
+
+        it { is_expected.to_not be_ok }
+        it { is_expected.to_not be_success }
+        it { expect(status).to eq(422) }
+        it { expect(json).to have_key(:error) }
+        it { expect(error_json).to have_key(:email) }
+        it { expect(error_json[:email]).to match_array(["has already been taken"]) }
+      end
+
+      context "valid" do
+        let(:expected_contact_json) do
+          JSON.parse(ContactSerializer.new(contact).to_json)
+        end
+
+        before do
+          patch "/api/v1/contacts/#{contact.id}"
+        end
+
+        it { is_expected.to be_ok }
+        it { is_expected.to be_success }
+        it { expect(status).to eq(200) }
+        it { expect(json).to have_key(:contact) }
+        it { expect(json).to eq(expected_contact_json) }
+      end
+    end
   end
 
   describe "DELETE /api/v1/contacts/:id" do
-    let(:contact) { FactoryGirl.create(:contact) }
-
     context "not found" do
-      let(:expected_error_json) do
-        JSON.parse({
-          error: "Couldn't find Contact with [WHERE \"contacts\".\"id\" = ?]"
-        }.to_json)
-      end
-
       before do
         delete "/api/v1/contacts/0"
       end
@@ -100,10 +173,12 @@ describe "API::V1::Contacts Requests" do
       it { is_expected.to_not be_success }
       it { expect(status).to eq(404) }
       it { expect(json).to have_key(:error) }
-      it { expect(json).to eq(expected_error_json) }
+      it { expect(error_json).to eq("Couldn't find Contact with ID = 0") }
     end
 
     context "found" do
+      let(:contact) { FactoryGirl.create(:contact) }
+
       before do
         delete "/api/v1/contacts/#{contact.id}"
       end

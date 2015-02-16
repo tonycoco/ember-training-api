@@ -18,14 +18,6 @@ module API
             @permitted_params ||= declared(params, include_missing: false)
           end
         end
-
-        rescue_from ActiveRecord::RecordNotFound do |exception|
-          error_response(message: exception.message, status: 404)
-        end
-
-        rescue_from :all do |exception|
-          error_response(message: "Something went wrong", status: 500)
-        end
       end
     end
   end
