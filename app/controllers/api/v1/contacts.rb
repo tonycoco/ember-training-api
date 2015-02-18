@@ -36,7 +36,7 @@ module API
           begin
             Contact.create!(permitted_params[:contact])
           rescue ActiveRecord::RecordInvalid => exception
-            active_model_serializer_errors!(exception.record.errors, 400)
+            active_model_serializer_errors!(exception.record.errors, 422)
           end
         end
 

@@ -90,7 +90,7 @@ describe "API::V1::Contacts Requests" do
 
       it { is_expected.to_not be_ok }
       it { is_expected.to_not be_success }
-      it { expect(status).to eq(400) }
+      it { expect(status).to eq(422) }
       it { expect(json).to have_key(:email) }
       it { expect(json[:email]).to match_array(["has already been taken"]) }
     end
