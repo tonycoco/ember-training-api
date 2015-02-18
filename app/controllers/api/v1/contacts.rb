@@ -25,14 +25,16 @@ module API
 
         desc "Create a contact"
         params do
-          requires :email, type: String, desc: "Email"
-          requires :first_name, type: String, desc: "First Name"
-          requires :last_name, type: String, desc: "Last Name"
-          requires :phone_number, type: String, desc: "Phone Number"
+          requires :contact, type: Hash do
+            requires :email, type: String, desc: "Email"
+            requires :first_name, type: String, desc: "First Name"
+            requires :last_name, type: String, desc: "Last Name"
+            requires :phone_number, type: String, desc: "Phone Number"
+          end
         end
         post do
           begin
-            Contact.create!(permitted_params)
+            Contact.create!(permitted_params[:contact])
           rescue ActiveRecord::RecordInvalid => exception
             error!(exception.record.errors, 400)
           end
@@ -41,16 +43,18 @@ module API
         desc "Update a contact"
         params do
           requires :id, type: Integer, desc: "ID"
-          optional :email, type: String, desc: "Email"
-          optional :first_name, type: String, desc: "First Name"
-          optional :last_name, type: String, desc: "Last Name"
-          optional :phone_number, type: String, desc: "Phone Number"
+          requires :contact, type: Hash do
+            optional :email, type: String, desc: "Email"
+            optional :first_name, type: String, desc: "First Name"
+            optional :last_name, type: String, desc: "Last Name"
+            optional :phone_number, type: String, desc: "Phone Number"
+          end
         end
         route_param :id do
           put do
             begin
               contact = Contact.where(id: permitted_params[:id]).first!
-              contact.update!(permitted_params)
+              contact.update!(permitted_params[:contact])
               contact
             rescue ActiveRecord::RecordNotFound
               error!("Couldn't find Contact with ID = #{permitted_params[:id]}", 404)

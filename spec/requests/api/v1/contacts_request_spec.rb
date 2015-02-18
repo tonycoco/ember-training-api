@@ -6,6 +6,7 @@ describe "API::V1::Contacts Requests" do
   let(:status) { subject.status }
   let(:body) { subject.body }
   let(:json) { JSON.parse(body).with_indifferent_access }
+  let(:contact_json) { json[:contact] }
   let(:error_json) { json[:error] }
 
   describe "GET /api/v1/contacts" do
@@ -28,7 +29,7 @@ describe "API::V1::Contacts Requests" do
       let!(:contacts) { FactoryGirl.create_list :contact, number_of_contacts }
       let(:expected_contacts_json) do
         contacts.map do |contact|
-          JSON.parse(ContactSerializer.new(contact).to_json)["contact"]
+          JSON.parse(ContactSerializer.new(contact).to_json).with_indifferent_access[:contact]
         end
       end
 
@@ -61,7 +62,7 @@ describe "API::V1::Contacts Requests" do
     context "found" do
       let(:contact) { FactoryGirl.create(:contact) }
       let(:expected_contact_json) do
-        JSON.parse(ContactSerializer.new(contact).to_json)
+        JSON.parse(ContactSerializer.new(contact).to_json).with_indifferent_access
       end
 
       before do
@@ -80,7 +81,7 @@ describe "API::V1::Contacts Requests" do
     context "invalid" do
       before do
         expect do
-          post "/api/v1/contacts"
+          post "/api/v1/contacts", contact: { creates_an: "error" }
         end.to_not change { Contact.count }
       end
 
@@ -96,14 +97,13 @@ describe "API::V1::Contacts Requests" do
 
     context "valid" do
       let(:contact_attributes) { FactoryGirl.attributes_for(:contact) }
-      let(:contact_json) { json[:contact] }
       let(:expected_contact_json) do
-        JSON.parse(ContactSerializer.new(Contact.last).to_json)
+        JSON.parse(ContactSerializer.new(Contact.last).to_json).with_indifferent_access[:contact]
       end
 
       before do
         expect do
-          post "/api/v1/contacts", contact_attributes
+          post "/api/v1/contacts", contact: contact_attributes
         end.to change { Contact.count }.from(0).to(1)
       end
 
@@ -111,14 +111,16 @@ describe "API::V1::Contacts Requests" do
       it { is_expected.to be_success }
       it { expect(status).to eq(201) }
       it { expect(json).to have_key(:contact) }
-      it { expect(json).to eq(expected_contact_json) }
+      it { expect(contact_json).to eq(expected_contact_json) }
     end
   end
 
   describe "PUT /api/v1/contacts/:id" do
+    let(:unique_email) { Faker::Internet.email }
+
     context "not found" do
       before do
-        put "/api/v1/contacts/0"
+        put "/api/v1/contacts/0", contact: { email: unique_email }
       end
 
       it { is_expected.to_not be_ok }
@@ -134,7 +136,7 @@ describe "API::V1::Contacts Requests" do
 
       context "invalid" do
         before do
-          put "/api/v1/contacts/#{contact.id}", email: another_contact.email
+          put "/api/v1/contacts/#{contact.id}", contact: { email: another_contact.email }
         end
 
         it { is_expected.to_not be_ok }
@@ -147,18 +149,21 @@ describe "API::V1::Contacts Requests" do
 
       context "valid" do
         let(:expected_contact_json) do
-          JSON.parse(ContactSerializer.new(contact).to_json)
+          expected = JSON.parse(ContactSerializer.new(contact).to_json).with_indifferent_access
+          expected[:contact][:email] = unique_email
+          expected[:contact].delete(:updated_at)
+          expected[:contact]
         end
 
         before do
-          put "/api/v1/contacts/#{contact.id}"
+          put "/api/v1/contacts/#{contact.id}", contact: { email: unique_email }
         end
 
         it { is_expected.to be_ok }
         it { is_expected.to be_success }
         it { expect(status).to eq(200) }
         it { expect(json).to have_key(:contact) }
-        it { expect(json).to eq(expected_contact_json) }
+        it { expect(contact_json).to include(expected_contact_json) }
       end
     end
   end
