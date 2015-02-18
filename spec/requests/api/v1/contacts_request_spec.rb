@@ -115,10 +115,10 @@ describe "API::V1::Contacts Requests" do
     end
   end
 
-  describe "PATCH /api/v1/contacts/:id" do
+  describe "PUT /api/v1/contacts/:id" do
     context "not found" do
       before do
-        patch "/api/v1/contacts/0"
+        put "/api/v1/contacts/0"
       end
 
       it { is_expected.to_not be_ok }
@@ -134,7 +134,7 @@ describe "API::V1::Contacts Requests" do
 
       context "invalid" do
         before do
-          patch "/api/v1/contacts/#{contact.id}", email: another_contact.email
+          put "/api/v1/contacts/#{contact.id}", email: another_contact.email
         end
 
         it { is_expected.to_not be_ok }
@@ -151,7 +151,7 @@ describe "API::V1::Contacts Requests" do
         end
 
         before do
-          patch "/api/v1/contacts/#{contact.id}"
+          put "/api/v1/contacts/#{contact.id}"
         end
 
         it { is_expected.to be_ok }

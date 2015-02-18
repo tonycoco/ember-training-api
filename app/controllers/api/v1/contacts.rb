@@ -47,7 +47,7 @@ module API
           optional :phone_number, type: String, desc: "Phone Number"
         end
         route_param :id do
-          patch do
+          put do
             begin
               contact = Contact.where(id: permitted_params[:id]).first!
               contact.update!(permitted_params)
