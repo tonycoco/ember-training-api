@@ -36,7 +36,7 @@ module API
           begin
             Contact.create!(permitted_params[:contact])
           rescue ActiveRecord::RecordInvalid => exception
-            error!(exception.record.errors, 400)
+            active_model_serializer_errors!(exception.record.errors, 400)
           end
         end
 
@@ -59,7 +59,7 @@ module API
             rescue ActiveRecord::RecordNotFound
               error!("Couldn't find Contact with ID = #{permitted_params[:id]}", 404)
             rescue ActiveRecord::RecordInvalid => exception
-              error!(exception.record.errors, 422)
+              active_model_serializer_errors!(exception.record.errors, 422)
             end
           end
         end

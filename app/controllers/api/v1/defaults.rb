@@ -17,6 +17,11 @@ module API
           def permitted_params
             @permitted_params ||= declared(params, include_missing: false)
           end
+
+          def active_model_serializer_errors!(errors, status)
+            status(status)
+            errors
+          end
         end
       end
     end

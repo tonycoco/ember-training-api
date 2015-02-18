@@ -79,20 +79,20 @@ describe "API::V1::Contacts Requests" do
 
   describe "POST /api/v1/contacts" do
     context "invalid" do
+      let!(:another_contact) { FactoryGirl.create(:contact) }
+      let(:contact_attributes) { FactoryGirl.attributes_for(:contact, email: another_contact.email) }
+
       before do
         expect do
-          post "/api/v1/contacts", contact: { creates_an: "error" }
+          post "/api/v1/contacts", contact: contact_attributes
         end.to_not change { Contact.count }
       end
 
       it { is_expected.to_not be_ok }
       it { is_expected.to_not be_success }
       it { expect(status).to eq(400) }
-      it { expect(json).to have_key(:error) }
-      it { expect(error_json).to include("email") }
-      it { expect(error_json).to include("first_name") }
-      it { expect(error_json).to include("last_name") }
-      it { expect(error_json).to include("phone_number") }
+      it { expect(json).to have_key(:email) }
+      it { expect(json[:email]).to match_array(["has already been taken"]) }
     end
 
     context "valid" do
@@ -142,9 +142,8 @@ describe "API::V1::Contacts Requests" do
         it { is_expected.to_not be_ok }
         it { is_expected.to_not be_success }
         it { expect(status).to eq(422) }
-        it { expect(json).to have_key(:error) }
-        it { expect(error_json).to have_key(:email) }
-        it { expect(error_json[:email]).to match_array(["has already been taken"]) }
+        it { expect(json).to have_key(:email) }
+        it { expect(json[:email]).to match_array(["has already been taken"]) }
       end
 
       context "valid" do
